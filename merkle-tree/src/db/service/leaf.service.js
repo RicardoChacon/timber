@@ -3,7 +3,7 @@
  * @author iAmMichaelConnor
  * @desc orchestrates inserts to and gets from the mongodb
  */
-
+import { createClient } from 'redis';
 import { COLLECTIONS } from '../common/constants';
 import { leafMapper } from '../mappers';
 import logger from '../../logger';
@@ -23,9 +23,12 @@ export default class LeafService {
   async insertLeaf(treeHeight, leaf) {
     logger.silly(`data before mapping: ${JSON.stringify(leaf, null, 2)}`);
     logger.debug('src/db/service/leaf.service insertLeaf()');
-    const mappedData = leafMapper(treeHeight, leaf);
-    logger.silly(`data after mapping: ${JSON.stringify(mappedData, null, 2)}`);
+    // Insert Leaf into Redis Cache / Publish RabbitMQ message for NF Client
+    logger.debug('Here is where I would insert the leaf into Redis/Rabbit ');
 
+    const mappedData = await leafMapper(treeHeight, leaf);
+    logger.silly(`data after mapping: ${JSON.stringify(mappedData, null, 2)}`);
+    logger.debug(`Debug data after mapping: ${JSON.stringify(mappedData, null, 2)}`);
     // insert the leaf into the 'nodes' collection:
     try {
       const dbResponse = await this.db.save(COLLECTIONS.NODE, mappedData);

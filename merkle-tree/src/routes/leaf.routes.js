@@ -7,7 +7,7 @@
 import { LeafService, MetadataService } from '../db/service';
 import merkleTreeController from '../merkle-tree-controller';
 import logger from '../logger';
-
+import amqp from 'amqplib';
 /**
  * Add a new leaf to the tree's 'nodes' db.
  * req.body {
@@ -30,7 +30,20 @@ async function insertLeaf(req, res, next) {
     const metadataService = new MetadataService(req.user.db);
     const leafService = new LeafService(req.user.db);
     const { treeHeight } = await metadataService.getTreeHeight();
-
+    // add the rabbitMQ
+    const connection = await amqplib.connect(amqpUrl, 'heartbeat=60');
+    const channel = await connection.createChannel();
+    console.log('Publishing');
+    const exchange = 'user.timber_nfc';
+    const queue = 'user.commitments';
+    const routingKey = 'commitments';
+    await channel.assertExchange(exchange, 'direct', { durable: true });
+    await channel.assertQueue(queue, { durable: true });
+    await channel.bindQueue(queue, exchange, routingKey);
+    await channel.close();
+    await connection.close();
+    console.info('Channel and connection closed');
+    logger.debug(`Leaf ${leaf}; Tree Height ${treeHeight}`);
     await leafService.insertLeaf(treeHeight, leaf);
 
     res.data = { message: 'inserted' };

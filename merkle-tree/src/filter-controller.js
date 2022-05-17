@@ -64,6 +64,7 @@ const newLeafResponseFunction = async (eventObject, args) => {
 
   const leafService = new LeafService(db);
   leafService.insertLeaf(treeHeight, leaf); // no need to await this
+  // await leafService.insertLeaf(treeHeight, leaf); // no need to await this
 };
 
 /**
@@ -238,7 +239,7 @@ async function getFromBlock(db, contractName) {
       receipt = await utilsWeb3.getTransactionReceipt(transactionHash);
       logger.info(`receipt: ${receipt}`);
     }
-    
+
     blockNumber = receipt ? receipt.blockNumber : config.FILTER_GENESIS_BLOCK_NUMBER;
     logger.warn(
       `No filtering history found in mongodb, so starting filter from the contract's deployment block ${blockNumber}`,
